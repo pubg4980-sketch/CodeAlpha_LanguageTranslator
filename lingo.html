@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Lingo — Translator</title>
+<style>
+  :root{
+    --paper:#FAF8F4;
+    --paper-dim:#F1EDE4;
+    --ink:#1A1A1A;
+    --ink-soft:#6B6660;
+    --rule:#DDD7C9;
+    --coral:#E8543E;
+    --coral-soft:#FBE4E0;
+    --serif: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+
+  html,body{
+    margin:0; padding:0;
+    background:#05060C;
+    color:var(--ink);
+    font-family:var(--sans);
+    min-height:100vh;
+  }
+
+  body{
+    display:flex;
+    justify-content:center;
+    padding: 28px 16px 60px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* ---------- Space background ---------- */
+  .space-bg{
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse 70% 50% at 20% 15%, rgba(74,53,150,0.35), transparent 60%),
+      radial-gradient(ellipse 60% 45% at 85% 75%, rgba(120,40,110,0.25), transparent 60%),
+      radial-gradient(ellipse 100% 100% at 50% 50%, #0B0C1C 0%, #05060C 70%);
+  }
+
+  /* ---- Star layers: tiny, medium, large, coloured ---- */
+  .stars{
+    position:absolute;
+    inset:0;
+    background-repeat: repeat;
+  }
+
+  /* Tiny stars — dense field */
+  .stars.s1{
+    background-image:
+      radial-gradient(1px 1px at  7% 12%, #fff, transparent),
+      radial-gradient(1px 1px at 21%  3%, #fff, transparent),
+      radial-gradient(1px 1px at 34% 78%, #fff, transparent),
+      radial-gradient(1px 1px at 48% 42%, #fff, transparent),
+      radial-gradient(1px 1px at 56% 91%, #fff, transparent),
+      radial-gradient(1px 1px at 63% 27%, #fff, transparent),
+      radial-gradient(1px 1px at 77% 54%, #fff, transparent),
+      radial-gradient(1px 1px at 88%  8%, #fff, transparent),
+      radial-gradient(1px 1px at 93% 67%, #fff, transparent),
+      radial-gradient(1px 1px at  2% 83%, #fff, transparent),
+      radial-gradient(1px 1px at 14% 58%, #fff, transparent),
+      radial-gradient(1px 1px at 29% 36%, #fff, transparent),
+      radial-gradient(1px 1px at 41% 15%, #fff, transparent),
+      radial-gradient(1px 1px at 52% 63%, #fff, transparent),
+      radial-gradient(1px 1px at 69% 80%, #fff, transparent),
+      radial-gradient(1px 1px at 83% 33%, #fff, transparent),
+      radial-gradient(1px 1px at 96% 49%, #fff, transparent),
+      radial-gradient(1px 1px at 18% 96%, #fff, transparent),
+      radial-gradient(1px 1px at 37% 22%, #fff, transparent),
+      radial-gradient(1px 1px at 74%  2%, #fff, transparent);
+    background-size: 100% 100%;
+    opacity: 0.55;
+    animation: twinkle1 4.5s ease-in-out infinite alternate;
+  }
+
+  /* Medium stars */
+  .stars.s2{
+    background-image:
+      radial-gradient(1.5px 1.5px at 11% 31%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 26% 72%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 43%  8%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 58% 55%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 72% 88%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 85% 19%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at  5% 47%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 32% 93%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 65% 41%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 91% 76%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 19% 17%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 79% 60%, #fff, transparent);
+    background-size: 100% 100%;
+    opacity: 0.45;
+    animation: twinkle1 6s ease-in-out infinite alternate-reverse;
+  }
+
+  /* Large bright stars */
+  .stars.s3{
+    background-image:
+      radial-gradient(2.5px 2.5px at 15% 25%, #ffffffcc, transparent),
+      radial-gradient(2px 2px   at 50% 70%, #ccc8ffcc, transparent),
+      radial-gradient(2.5px 2.5px at 80% 15%, #ffffffcc, transparent),
+      radial-gradient(2px 2px   at 35% 55%, #ffffffcc, transparent),
+      radial-gradient(2.5px 2.5px at 90% 40%, #ccc8ffcc, transparent),
+      radial-gradient(2px 2px   at 60% 90%, #ffffffcc, transparent),
+      radial-gradient(3px 3px   at  8% 80%, #ffffffdd, transparent),
+      radial-gradient(2px 2px   at 70% 30%, #ffd6b0cc, transparent);
+    background-size: 100% 100%;
+    opacity: 0.75;
+    animation: twinkle2 3.8s ease-in-out infinite alternate;
+  }
+
+  /* Colour-tinted stars (blue / purple hues) */
+  .stars.s4{
+    background-image:
+      radial-gradient(2px 2px at 22% 44%, rgba(160,140,255,0.8), transparent),
+      radial-gradient(1.5px 1.5px at 47% 18%, rgba(100,180,255,0.7), transparent),
+      radial-gradient(2px 2px at 73% 62%, rgba(180,140,255,0.8), transparent),
+      radial-gradient(1.5px 1.5px at 89% 87%, rgba(100,200,255,0.7), transparent),
+      radial-gradient(2px 2px at  4% 55%, rgba(150,130,255,0.7), transparent),
+      radial-gradient(1.5px 1.5px at 61% 35%, rgba(255,200,150,0.65), transparent);
+    background-size: 100% 100%;
+    opacity: 0.65;
+    animation: twinkle2 5s ease-in-out infinite alternate-reverse;
+  }
+
+  @keyframes twinkle1{
+    0%{ opacity: 0.2; }
+    100%{ opacity: 0.8; }
+  }
+  @keyframes twinkle2{
+    0%{ opacity: 0.4; }
+    100%{ opacity: 1; }
+  }
+
+  .floating-words{
+    position:absolute;
+    inset:0;
+  }
+  .fword{
+    position:absolute;
+    color: rgba(232,234,242,0.9);
+    font-family: var(--serif);
+    font-style: italic;
+    white-space: nowrap;
+    user-select: none;
+    pointer-events: none;
+    will-change: transform, opacity;
+
+    /* Bubble wrap effect */
+    background: radial-gradient(ellipse at 35% 35%,
+      rgba(255,255,255,0.18) 0%,
+      rgba(180,165,255,0.10) 40%,
+      rgba(120,100,220,0.08) 70%,
+      transparent 100%);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    border: 1px solid rgba(200,190,255,0.25);
+    border-radius: 999px;
+    padding: 6px 14px 6px 14px;
+    box-shadow:
+      0 0 12px rgba(140,120,255,0.20),
+      0 0 28px rgba(100,80,200,0.10),
+      inset 0 1px 0 rgba(255,255,255,0.25),
+      inset 0 -1px 0 rgba(0,0,0,0.15);
+    text-shadow: 0 0 10px rgba(180,160,255,0.55);
+  }
+  .fword .gloss{
+    display:block;
+    font-family: var(--sans);
+    font-style: normal;
+    font-size: 0.52em;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: rgba(200,190,255,0.65);
+    margin-top: 1px;
+    text-align: center;
+    text-shadow: none;
+  }
+
+  @keyframes driftA{
+    0%{ transform: translate(0,0) rotate(0deg); opacity:0; }
+    8%{ opacity: 1; }
+    50%{ transform: translate(40px,-90px) rotate(3deg); }
+    92%{ opacity: 1; }
+    100%{ transform: translate(-30px,-190px) rotate(-2deg); opacity:0; }
+  }
+  @keyframes driftB{
+    0%{ transform: translate(0,0) rotate(0deg); opacity:0; }
+    8%{ opacity: 1; }
+    50%{ transform: translate(-55px,80px) rotate(-4deg); }
+    92%{ opacity: 1; }
+    100%{ transform: translate(35px,170px) rotate(3deg); opacity:0; }
+  }
+  @keyframes driftC{
+    0%{ transform: translate(0,0) rotate(0deg); opacity:0; }
+    8%{ opacity: 1; }
+    50%{ transform: translate(70px,40px) rotate(-3deg); }
+    92%{ opacity: 1; }
+    100%{ transform: translate(140px,90px) rotate(4deg); opacity:0; }
+  }
+  @keyframes driftD{
+    0%{ transform: translate(0,0) rotate(0deg); opacity:0; }
+    8%{ opacity: 1; }
+    50%{ transform: translate(-80px,-50px) rotate(4deg); }
+    92%{ opacity: 1; }
+    100%{ transform: translate(-150px,-100px) rotate(-3deg); opacity:0; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .fword{ animation: none !important; opacity: 0.5 !important; }
+    .stars{ animation: none !important; }
+  }
+
+  .page{
+    width:100%;
+    max-width:720px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ---------- Header ---------- */
+  header{
+    margin-bottom: 22px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(232,234,242,0.15);
+  }
+  .eyebrow{
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #B5A8F0;
+    font-weight: 700;
+    margin: 0 0 6px;
+  }
+  h1{
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 32px;
+    margin: 0;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    color: #F1EFE9;
+  }
+  h1 em{
+    font-style: italic;
+    color: var(--coral);
+  }
+
+  /* ---------- Translator card ---------- */
+  .translator{
+    background: rgba(20,20,30,0.55);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+  }
+
+  .panel{
+    position: relative;
+    padding: 16px 18px 14px;
+  }
+
+  .panel-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom: 10px;
+  }
+
+  .lang-select{
+    appearance:none;
+    -webkit-appearance:none;
+    border:none;
+    background:transparent;
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: rgba(232,234,242,0.65);
+    padding: 6px 22px 6px 0;
+    cursor:pointer;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0L5 6L10 0' fill='%23B5A8F0'/></svg>");
+    background-repeat:no-repeat;
+    background-position: right 4px center;
+  }
+  .lang-select option{ color: #1A1A1A; }
+  .lang-select:focus-visible{
+    outline: 2px solid var(--coral);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+  .source .lang-select{ color: #F1EFE9; }
+
+  .char-count{
+    font-size: 11px;
+    color: rgba(232,234,242,0.45);
+    font-variant-numeric: tabular-nums;
+  }
+
+  textarea{
+    width:100%;
+    border:none;
+    resize:none;
+    font-family: var(--sans);
+    font-size: 18px;
+    line-height: 1.5;
+    color: #F1EFE9;
+    background: transparent;
+    min-height: 92px;
+    padding:0;
+    outline:none;
+  }
+  textarea::placeholder{ color: rgba(232,234,242,0.32); }
+
+  .output-text{
+    font-family: var(--serif);
+    font-size: 19px;
+    line-height: 1.55;
+    min-height: 92px;
+    color: #F1EFE9;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  .output-text.placeholder{
+    color: rgba(232,234,242,0.35);
+    font-family: var(--sans);
+    font-size: 15px;
+  }
+
+  .divider-row{
+    position: relative;
+    height: 1px;
+    background: rgba(255,255,255,0.12);
+    margin: 0 18px;
+  }
+
+  /* Swap dial */
+  .swap-wrap{
+    position: relative;
+    height: 0;
+  }
+  .swap-btn{
+    position:absolute;
+    top: -23px;
+    left: 50%;
+    transform: translateX(-50%);
+    width:46px; height:46px;
+    border-radius:50%;
+    background: rgba(30,28,45,0.85);
+    border:1.5px solid rgba(255,255,255,0.18);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    color: #F1EFE9;
+    transition: transform 0.45s cubic-bezier(.2,.8,.2,1), border-color 0.2s, background 0.2s;
+    z-index: 2;
+  }
+  .swap-btn:hover{ border-color: var(--coral); background: rgba(232,84,62,0.18); }
+  .swap-btn:focus-visible{ outline: 2px solid var(--coral); outline-offset: 2px; }
+  .swap-btn svg{ width:18px; height:18px; transition: transform 0.45s cubic-bezier(.2,.8,.2,1); }
+  .swap-btn.spin{ transform: translateX(-50%) rotate(180deg); }
+
+  .panel.target{
+    background: rgba(255,255,255,0.03);
+  }
+
+  /* ---------- Action row ---------- */
+  .action-row{
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 18px 16px;
+    border-top: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.03);
+  }
+
+  .status{
+    font-size: 12.5px;
+    color: rgba(232,234,242,0.5);
+    min-height: 16px;
+    flex: 1;
+  }
+  .status.error{ color: #FF8A7A; }
+
+  .icon-btn{
+    border:none;
+    background: transparent;
+    width: 36px; height:36px;
+    border-radius: 9px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    color: rgba(232,234,242,0.6);
+    transition: background 0.15s, color 0.15s;
+  }
+  .icon-btn:hover{ background: rgba(255,255,255,0.08); color: #fff; }
+  .icon-btn:focus-visible{ outline: 2px solid var(--coral); outline-offset: 1px; }
+  .icon-btn svg{ width:18px; height:18px; }
+  .icon-btn.copied{ color: #5FD38C; }
+
+  .icon-group{ display:flex; gap:4px; }
+
+  /* ---------- Translate button ---------- */
+  .translate-cta{
+    margin-top: 18px;
+    width: 100%;
+    border: none;
+    background: var(--coral);
+    color: #fff;
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.01em;
+    padding: 15px 0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .translate-cta:hover{ background: #D6432E; }
+  .translate-cta:active{ transform: scale(0.99); }
+  .translate-cta:disabled{ background: rgba(232,234,242,0.25); cursor: default; }
+  .translate-cta:focus-visible{ outline: 2px solid #fff; outline-offset: 3px; }
+
+  .hint{
+    margin-top: 12px;
+    font-size: 12px;
+    color: rgba(232,234,242,0.45);
+    text-align: center;
+  }
+  .hint kbd{
+    font-family: var(--sans);
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 11px;
+    color: #F1EFE9;
+  }
+
+  @media (max-width: 480px){
+    h1{ font-size: 27px; }
+    textarea, .output-text{ font-size: 16.5px; }
+    .panel{ padding: 14px 14px 12px; }
+    .action-row{ padding: 10px 14px 14px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .swap-btn, .swap-btn svg{ transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="space-bg" aria-hidden="true">
+  <div class="stars s1"></div>
+  <div class="stars s2"></div>
+  <div class="stars s3"></div>
+  <div class="stars s4"></div>
+  <div class="floating-words" id="floatingWords"></div>
+</div>
+
+<div class="page">
+
+  <header>
+    <p class="eyebrow">Plain-text translation</p>
+    <h1><em>Lingo</em></h1>
+  </header>
+
+  <div class="translator">
+
+    <div class="panel source">
+      <div class="panel-top">
+        <select class="lang-select" id="sourceLang" aria-label="Source language"></select>
+        <span class="char-count" id="charCount">0 / 4000</span>
+      </div>
+      <textarea id="sourceText" placeholder="Type or paste text to translate…" maxlength="4000"></textarea>
+    </div>
+
+    <div class="divider-row">
+      <div class="swap-wrap">
+        <button class="swap-btn" id="swapBtn" aria-label="Swap languages" title="Swap languages">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M7 7h11l-3-3"/>
+            <path d="M17 17H6l3 3"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="panel target">
+      <div class="panel-top">
+        <select class="lang-select" id="targetLang" aria-label="Target language"></select>
+        <span class="char-count" id="loadingDot" style="display:none;">translating…</span>
+      </div>
+      <div class="output-text placeholder" id="outputText" aria-live="polite">Translation will appear here.</div>
+    </div>
+
+    <div class="action-row">
+      <span class="status" id="statusMsg"></span>
+      <div class="icon-group">
+        <button class="icon-btn" id="speakBtn" aria-label="Read translation aloud" title="Listen">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+            <path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/>
+          </svg>
+        </button>
+        <button class="icon-btn" id="copyBtn" aria-label="Copy translation" title="Copy">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2"/>
+            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <button class="translate-cta" id="translateBtn">Translate</button>
+  <p class="hint">Translates automatically as you pause typing, or press <kbd>⌘/Ctrl + Enter</kbd></p>
+
+</div>
+
+<script>
+(function(){
+  const LANGS = [
+    ["auto","Detect language"],["en","English"],["es","Spanish"],["fr","French"],
+    ["de","German"],["it","Italian"],["pt","Portuguese"],["ru","Russian"],
+    ["zh","Chinese (Simplified)"],["ja","Japanese"],["ko","Korean"],["ar","Arabic"],
+    ["hi","Hindi"],["ur","Urdu"],["bn","Bengali"],["tr","Turkish"],["vi","Vietnamese"],
+    ["th","Thai"],["nl","Dutch"],["pl","Polish"],["sv","Swedish"],["el","Greek"],
+    ["he","Hebrew"],["id","Indonesian"],["fa","Persian"],["uk","Ukrainian"],
+    ["ro","Romanian"],["cs","Czech"],["pa","Punjabi"]
+  ];
+
+  const sourceSel = document.getElementById('sourceLang');
+  const targetSel = document.getElementById('targetLang');
+  const sourceText = document.getElementById('sourceText');
+  const outputText = document.getElementById('outputText');
+  const charCount = document.getElementById('charCount');
+  const loadingDot = document.getElementById('loadingDot');
+  const statusMsg = document.getElementById('statusMsg');
+  const translateBtn = document.getElementById('translateBtn');
+  const swapBtn = document.getElementById('swapBtn');
+  const copyBtn = document.getElementById('copyBtn');
+  const speakBtn = document.getElementById('speakBtn');
+
+  function fillSelect(sel, includeAuto){
+    sel.innerHTML = '';
+    LANGS.forEach(([code, name])=>{
+      if(code === 'auto' && !includeAuto) return;
+      const opt = document.createElement('option');
+      opt.value = code;
+      opt.textContent = name;
+      sel.appendChild(opt);
+    });
+  }
+  fillSelect(sourceSel, true);
+  fillSelect(targetSel, false);
+  sourceSel.value = 'auto';
+  targetSel.value = 'es';
+
+  let lastTranslated = '';
+  let debounceTimer = null;
+  let activeController = null;
+
+  sourceText.addEventListener('input', ()=>{
+    charCount.textContent = sourceText.value.length + ' / 4000';
+    clearTimeout(debounceTimer);
+    if(!sourceText.value.trim()){
+      resetOutput();
+      return;
+    }
+    debounceTimer = setTimeout(doTranslate, 700);
+  });
+
+  sourceText.addEventListener('keydown', (e)=>{
+    if((e.metaKey || e.ctrlKey) && e.key === 'Enter'){
+      e.preventDefault();
+      clearTimeout(debounceTimer);
+      doTranslate();
+    }
+  });
+
+  [sourceSel, targetSel].forEach(sel=>{
+    sel.addEventListener('change', ()=>{
+      if(sourceText.value.trim()) doTranslate();
+    });
+  });
+
+  translateBtn.addEventListener('click', ()=>{
+    clearTimeout(debounceTimer);
+    doTranslate();
+  });
+
+  function resetOutput(){
+    outputText.textContent = 'Translation will appear here.';
+    outputText.classList.add('placeholder');
+    statusMsg.textContent = '';
+    statusMsg.classList.remove('error');
+  }
+
+  async function doTranslate(){
+    const text = sourceText.value.trim();
+    if(!text){ resetOutput(); return; }
+    if(text === lastTranslated){ return; }
+
+    if(activeController) activeController.abort();
+    activeController = new AbortController();
+
+    const sl = sourceSel.value;
+    const tl = targetSel.value;
+
+    loadingDot.style.display = 'inline';
+    statusMsg.textContent = '';
+    statusMsg.classList.remove('error');
+    translateBtn.disabled = true;
+
+    try{
+      const url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=' +
+                  encodeURIComponent(sl) + '&tl=' + encodeURIComponent(tl) +
+                  '&dt=t&q=' + encodeURIComponent(text);
+
+      const res = await fetch(url, { signal: activeController.signal });
+      if(!res.ok) throw new Error('Request failed (' + res.status + ')');
+      const data = await res.json();
+
+      let translated = '';
+      if(Array.isArray(data) && Array.isArray(data[0])){
+        translated = data[0].map(seg => seg[0]).join('');
+      }
+
+      if(!translated){
+        throw new Error('No translation returned');
+      }
+
+      outputText.textContent = translated;
+      outputText.classList.remove('placeholder');
+      lastTranslated = text;
+
+      // detected language feedback when auto-detect is on
+      if(sl === 'auto' && data[2]){
+        const detected = LANGS.find(l => l[0] === data[2]);
+        statusMsg.textContent = 'Detected: ' + (detected ? detected[1] : data[2]);
+      } else {
+        statusMsg.textContent = '';
+      }
+    }catch(err){
+      if(err.name === 'AbortError') return;
+      statusMsg.textContent = 'Couldn\'t reach the translation service. Check your connection and try again.';
+      statusMsg.classList.add('error');
+    }finally{
+      loadingDot.style.display = 'none';
+      translateBtn.disabled = false;
+    }
+  }
+
+  swapBtn.addEventListener('click', ()=>{
+    if(sourceSel.value === 'auto') return; // can't swap into "detect"
+    swapBtn.classList.add('spin');
+    setTimeout(()=> swapBtn.classList.remove('spin'), 450);
+
+    const newSource = targetSel.value;
+    const newTarget = sourceSel.value;
+    sourceSel.value = newSource;
+    targetSel.value = newTarget;
+
+    const currentOutput = outputText.classList.contains('placeholder') ? '' : outputText.textContent;
+    if(currentOutput){
+      sourceText.value = currentOutput;
+      charCount.textContent = sourceText.value.length + ' / 4000';
+      lastTranslated = '';
+      doTranslate();
+    }
+  });
+
+  copyBtn.addEventListener('click', async ()=>{
+    if(outputText.classList.contains('placeholder')) return;
+    try{
+      await navigator.clipboard.writeText(outputText.textContent);
+      copyBtn.classList.add('copied');
+      copyBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+      setTimeout(()=>{
+        copyBtn.classList.remove('copied');
+        copyBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>';
+      }, 1600);
+    }catch(e){
+      // fallback for older browsers
+      const ta = document.createElement('textarea');
+      ta.value = outputText.textContent;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+  });
+
+  speakBtn.addEventListener('click', ()=>{
+    if(outputText.classList.contains('placeholder')) return;
+    if(!('speechSynthesis' in window)){
+      statusMsg.textContent = 'Text-to-speech isn\'t supported on this device.';
+      statusMsg.classList.add('error');
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(outputText.textContent);
+    utter.lang = targetSel.value;
+    window.speechSynthesis.speak(utter);
+  });
+})();
+</script>
+
+<script>
+(function(){
+  const WORD_SET = [
+    { en:"hello", items:[["Bonjour","French"],["Hola","Spanish"],["こんにちは","Japanese"],["Hallo","German"],["مرحبا","Arabic"]] },
+    { en:"love", items:[["Amour","French"],["Amor","Spanish"],["愛","Japanese"],["Liebe","German"],["Любовь","Russian"]] },
+    { en:"peace", items:[["Paix","French"],["Paz","Spanish"],["平和","Japanese"],["सलाम","Hindi"],["سلام","Persian"]] },
+    { en:"light", items:[["Lumière","French"],["Luz","Spanish"],["光","Chinese"],["Свет","Russian"],["نور","Urdu"]] },
+    { en:"dream", items:[["Rêve","French"],["Sueño","Spanish"],["夢","Japanese"],["Traum","German"],["Hayal","Turkish"]] },
+    { en:"river", items:[["Rivière","French"],["Río","Spanish"],["河","Chinese"],["नदी","Hindi"],["Nehir","Turkish"]] },
+    { en:"star", items:[["Étoile","French"],["Estrella","Spanish"],["星","Japanese"],["Stern","German"],["نجمة","Arabic"]] },
+    { en:"home", items:[["Maison","French"],["Casa","Spanish"],["家","Chinese"],["Дом","Russian"],["घर","Hindi"]] },
+    { en:"time", items:[["Temps","French"],["Tiempo","Spanish"],["時間","Japanese"],["Zeit","German"],["وقت","Arabic"]] },
+    { en:"hope", items:[["Espoir","French"],["Esperanza","Spanish"],["希望","Chinese"],["Надежда","Russian"],["Umut","Turkish"]] },
+    { en:"friend", items:[["Ami","French"],["Amigo","Spanish"],["友達","Japanese"],["Freund","German"],["दोस्त","Hindi"]] },
+    { en:"world", items:[["Monde","French"],["Mundo","Spanish"],["世界","Japanese"],["Welt","German"],["دنیا","Urdu"]] }
+  ];
+
+  const drifts = ['driftA','driftB','driftC','driftD'];
+  const container = document.getElementById('floatingWords');
+  if(!container) return;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Pick one translation per word, shuffle the pool
+  const pool = WORD_SET.map(w => {
+    const choice = w.items[Math.floor(Math.random() * w.items.length)];
+    return { word: choice[0], gloss: w.en };
+  });
+  for(let i = pool.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i+1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+
+  const isNarrow = window.innerWidth < 640;
+
+  // Zones: left strip, right strip, top band, bottom band
+  // We'll place words across all 4 edge zones so the card area stays clear
+  function overlapsCard(xPct, yPct){
+    const cardLeft = isNarrow ? 2 : 16;
+    const cardRight = isNarrow ? 98 : 84;
+    return xPct > cardLeft && xPct < cardRight && yPct > 5 && yPct < 88;
+  }
+
+  // Generate positions deliberately across all edges including bottom
+  function edgePosition(){
+    const zone = Math.floor(Math.random() * 4);
+    let xPct, yPct;
+    switch(zone){
+      case 0: // left strip
+        xPct = Math.random() * (isNarrow ? 10 : 14);
+        yPct = Math.random() * 90 + 5;
+        break;
+      case 1: // right strip
+        xPct = (isNarrow ? 88 : 82) + Math.random() * (isNarrow ? 10 : 16);
+        yPct = Math.random() * 90 + 5;
+        break;
+      case 2: // top band
+        xPct = Math.random() * 90 + 2;
+        yPct = Math.random() * 8;
+        break;
+      case 3: // bottom band  ← NEW: words appear at the bottom too
+        xPct = Math.random() * 90 + 2;
+        yPct = 87 + Math.random() * 11;
+        break;
+    }
+    return { xPct, yPct };
+  }
+
+  const totalCount = isNarrow ? 10 : 18;
+  const placed = [];
+
+  function tooClose(x, y, minDist){
+    return placed.some(p => Math.hypot(p.x - x, p.y - y) < minDist);
+  }
+
+  for(let i = 0; i < totalCount; i++){
+    const item = pool[i % pool.length];
+    let xPct, yPct, tries = 0;
+    do {
+      const pos = edgePosition();
+      xPct = pos.xPct; yPct = pos.yPct;
+      tries++;
+    } while((overlapsCard(xPct, yPct) || tooClose(xPct, yPct, 10)) && tries < 20);
+
+    placed.push({ x: xPct, y: yPct });
+
+    const el = document.createElement('div');
+    el.className = 'fword';
+    const sizes = ['13px','15px','17px','20px','23px'];
+    const fontSize = sizes[Math.floor(Math.random() * sizes.length)];
+    el.style.left = xPct + '%';
+    el.style.top = yPct + '%';
+    el.style.fontSize = fontSize;
+    el.innerHTML = item.word + '<span class="gloss">' + item.gloss + '</span>';
+
+    if(!reduceMotion){
+      const drift = drifts[Math.floor(Math.random() * drifts.length)];
+      const duration = 12 + Math.random() * 16;
+      const delay = -(Math.random() * duration);
+      el.style.animation = drift + ' ' + duration.toFixed(1) + 's ease-in-out ' + delay.toFixed(1) + 's infinite';
+    } else {
+      el.style.opacity = '0.6';
+    }
+
+    container.appendChild(el);
+  }
+})();
+</script>
+
+</body>
+</html>
